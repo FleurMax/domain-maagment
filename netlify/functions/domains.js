@@ -45,8 +45,7 @@ export const handler = async (event) => {
       const selections = await collection.find({}).toArray();
       const selectionMap = selections.reduce((acc, curr) => {
         acc[curr.domain] = {
-          forSale: curr.forSale || false,
-          cancelAutoRenew: curr.cancelAutoRenew || false
+          forSale: curr.forSale || false
         };
         return acc;
       }, {});
@@ -60,13 +59,13 @@ export const handler = async (event) => {
 
     // POST Request: Save selection
     if (event.httpMethod === "POST") {
-      const { domain, forSale, cancelAutoRenew } = JSON.parse(event.body);
+      const { domain, forSale } = JSON.parse(event.body);
       
       if (!domain) return { statusCode: 400, headers, body: "Domain is required" };
 
       await collection.updateOne(
         { domain },
-        { $set: { domain, forSale, cancelAutoRenew, updatedAt: new Date() } },
+        { $set: { domain, forSale, updatedAt: new Date() } },
         { upsert: true }
       );
 

@@ -67,9 +67,9 @@ const App = () => {
   }, []);
 
   // Sync selection to MongoDB and LocalStorage
-  const handleToggle = async (domain, type, value) => {
-    const current = savedSelections[domain] || { forSale: false, cancelAutoRenew: false };
-    const updated = { ...current, [type]: value };
+  const handleToggle = async (domain, value) => {
+    const current = savedSelections[domain] || { forSale: false };
+    const updated = { ...current, forSale: value };
     
     // Optimistic local update
     const newPool = { ...savedSelections, [domain]: updated };
@@ -83,14 +83,12 @@ const App = () => {
         method: 'POST',
         body: JSON.stringify({
           domain,
-          forSale: updated.forSale,
-          cancelAutoRenew: updated.cancelAutoRenew
+          forSale: updated.forSale
         }),
         headers: { 'Content-Type': 'application/json' }
       });
     } catch (err) {
       console.error("Database sync failed", err);
-      // Wait a moment and then maybe retry? Just notifying for now.
     } finally {
       setTimeout(() => setSyncing(false), 300);
     }
@@ -117,11 +115,10 @@ const App = () => {
   const stats = useMemo(() => {
     let totalPayingPrice = 0;
     let totalSaleMarketVal = 0;
-    let savedByCanceling = 0;
 
     data.forEach(item => {
       const domainName = item['Domain Name'];
-      const selection = savedSelections[domainName] || { forSale: false, cancelAutoRenew: false };
+      const selection = savedSelections[domainName] || { forSale: false };
       
       const price = parsePrice(item['Renewal Price']);
       const marketVal = parsePrice(item['Estimated Value']);
@@ -131,13 +128,9 @@ const App = () => {
       if (selection.forSale) {
         totalSaleMarketVal += marketVal * (1 - GODADDY_FEE_PERCENT/100);
       }
-      
-      if (selection.cancelAutoRenew) {
-        savedByCanceling += price;
-      }
     });
 
-    return { totalPayingPrice, totalSaleMarketVal, savedByCanceling };
+    return { totalPayingPrice, totalSaleMarketVal };
   }, [data, savedSelections]);
 
   const filteredData = useMemo(() => {
@@ -183,46 +176,33 @@ const App = () => {
         </div>
       </header>
 
-      {/* THREE MAIN PANELS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* MAIN PANELS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* 1. TOTAL PAYING PRICE */}
         <div className="glass p-8 border-l-4 border-blue-500/50">
           <div className="flex justify-between items-start mb-4">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Paying Price</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Portfolio Cost</p>
             <DollarSign className="text-blue-500/30" size={20} />
           </div>
           <h2 className="text-4xl font-bold text-white tracking-tight">
             {formatEuro(stats.totalPayingPrice)}
           </h2>
-          <p className="text-[9px] text-slate-600 mt-2 font-bold italic uppercase tracking-wider">Annual Operating Cost</p>
+          <p className="text-[9px] text-slate-600 mt-2 font-bold italic uppercase tracking-wider">Annual Renewal Total</p>
         </div>
 
         {/* 2. MONEY EARNED ON SALE */}
         <div className="glass p-8 border-l-4 border-emerald-500/50 relative overflow-hidden group">
           <div className="flex justify-between items-start mb-4">
-            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Money Earned (Sale)</p>
+            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Potential Liquidation Value</p>
             <TrendingUp className="text-emerald-500/30" size={20} />
           </div>
           <h2 className="text-4xl font-bold text-emerald-400 tracking-tight">
             {formatEuro(stats.totalSaleMarketVal)}
           </h2>
           <div className="flex flex-col mt-2 gap-1">
-            <p className="text-[9px] text-slate-500 font-bold tracking-tight uppercase">wild estimate - not exact</p>
-            <p className="text-[8px] text-slate-600 italic">Net to owner after {GODADDY_FEE_PERCENT}% fee.</p>
+            <p className="text-[9px] text-slate-500 font-bold tracking-tight uppercase">Net Estimate (After Fees)</p>
           </div>
-        </div>
-
-        {/* 3. MONEY SAVED BY CANCELING */}
-        <div className="glass p-8 border-l-4 border-rose-500/50 bg-rose-500/[0.02]">
-          <div className="flex justify-between items-start mb-4">
-            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Money Saved (Cancel)</p>
-            <Trash2 className="text-rose-500/30" size={20} />
-          </div>
-          <h2 className="text-4xl font-bold text-rose-400 tracking-tight">
-            {formatEuro(stats.savedByCanceling)}
-          </h2>
-          <p className="text-[9px] text-slate-600 mt-2 font-black italic uppercase tracking-wider">Guaranteed Gross Savings</p>
         </div>
       </div>
 
@@ -247,15 +227,14 @@ const App = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+        <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-[#0d0e14] z-10">
               <tr>
                 <th className="px-6 md:px-8 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Asset Details</th>
                 <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Cost</th>
                 <th className="hidden md:table-cell px-6 py-5 text-[10px] text-blue-500 font-bold uppercase tracking-widest text-right">Est. Sale</th>
-                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Sale</th>
-                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Stop</th>
+                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">List for Sale</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
@@ -288,16 +267,8 @@ const App = () => {
                         <input 
                           type="checkbox" 
                           checked={selection.forSale}
-                          onChange={(e) => handleToggle(domain, 'forSale', e.target.checked)}
+                          onChange={(e) => handleToggle(domain, e.target.checked)}
                           className="w-5 h-5 rounded-md accent-blue-600 cursor-pointer hover:scale-110 transition-transform"
-                        />
-                      </td>
-                      <td className="px-4 md:px-6 py-5 text-center">
-                        <input 
-                          type="checkbox" 
-                          checked={selection.cancelAutoRenew}
-                          onChange={(e) => handleToggle(domain, 'cancelAutoRenew', e.target.checked)}
-                          className="w-5 h-5 rounded-md accent-rose-600 cursor-pointer hover:scale-110 transition-transform"
                         />
                       </td>
                     </motion.tr>

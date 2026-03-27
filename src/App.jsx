@@ -115,16 +115,21 @@ const App = () => {
   const stats = useMemo(() => {
     let totalPayingPrice = 0;
     let totalSaleMarketVal = 0;
+    let savedByCanceling = 0;
 
     data.forEach(item => {
       const domainName = item['Domain Name'];
-      const selection = savedSelections[domainName] || { forSale: false };
+      const selection = savedSelections[domainName] || { forSale: false, cancelAutoRenew: false };
       
       const price = parsePrice(item['Renewal Price']);
       const marketVal = parsePrice(item['Estimated Value']);
 
       totalPayingPrice += price;
 
+      if (selection.forSale) {
+        totalSaleMarketVal += marketVal * (1 - GODADDY_FEE_PERCENT/100);
+      }
+      
       if (selection.cancelAutoRenew) {
         savedByCanceling += price;
       }

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  DollarSign, 
-  Trash2, 
-  TrendingUp, 
-  Search, 
-  Loader2, 
+import {
+  DollarSign,
+  Trash2,
+  TrendingUp,
+  Search,
+  Loader2,
   Database,
   Info,
   ShieldCheck,
@@ -26,7 +26,7 @@ const App = () => {
     const local = localStorage.getItem('domain-selections');
     return local ? JSON.parse(local) : {};
   });
-  
+
   // Only show loader if we have NO data at all
   const [loading, setLoading] = useState(data.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +43,7 @@ const App = () => {
           const domains = await domainsRes.json();
           setData(domains);
           localStorage.setItem('domain-data', JSON.stringify(domains));
-          setLoading(false); 
+          setLoading(false);
         }
       } catch (err) {
         console.warn("Using offline domain data", err);
@@ -70,7 +70,7 @@ const App = () => {
   const handleToggle = async (domain, value) => {
     const current = savedSelections[domain] || { forSale: false };
     const updated = { ...current, forSale: value };
-    
+
     // Optimistic local update
     const newPool = { ...savedSelections, [domain]: updated };
     setSavedSelections(newPool);
@@ -96,10 +96,10 @@ const App = () => {
 
   // Utility to format money nicely
   const formatEuro = (val) => {
-    return new Intl.NumberFormat('nl-NL', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('nl-NL', {
+      style: 'currency',
       currency: 'EUR',
-      minimumFractionDigits: 2 
+      minimumFractionDigits: 2
     }).format(val);
   };
 
@@ -119,14 +119,14 @@ const App = () => {
     data.forEach(item => {
       const domainName = item['Domain Name'];
       const selection = savedSelections[domainName] || { forSale: false };
-      
+
       const price = parsePrice(item['Renewal Price']);
       const marketVal = parsePrice(item['Estimated Value']);
 
       totalPayingPrice += price;
 
       if (selection.forSale) {
-        totalSaleMarketVal += marketVal * (1 - GODADDY_FEE_PERCENT/100);
+        totalSaleMarketVal += marketVal * (1 - GODADDY_FEE_PERCENT / 100);
       }
     });
 
@@ -134,7 +134,7 @@ const App = () => {
   }, [data, savedSelections]);
 
   const filteredData = useMemo(() => {
-    return data.filter(d => 
+    return data.filter(d =>
       d['Domain Name']?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [data, searchTerm]);
@@ -156,7 +156,7 @@ const App = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-12 space-y-8 min-h-screen">
-      
+
       {/* Dynamic Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 glass p-8 shadow-2xl relative overflow-hidden group">
         <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
@@ -178,7 +178,7 @@ const App = () => {
 
       {/* MAIN PANELS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* 1. TOTAL PAYING PRICE */}
         <div className="glass p-8 border-l-4 border-blue-500/50">
           <div className="flex justify-between items-start mb-4">
@@ -213,7 +213,7 @@ const App = () => {
           <div className="space-y-1">
             <p className="text-sm font-semibold text-blue-200 uppercase tracking-wider text-[11px]">How GoDaddy calculates estimated selling price:</p>
             <p className="text-sm text-slate-400 leading-relaxed font-light">
-              GoDaddy uses a machine learning algorithm that analyzes millions of historical domain sales to determine value. 
+              GoDaddy uses a machine learning algorithm that analyzes millions of historical domain sales to determine value.
               The estimate considers keyword popularity, extensions, and comparable sales, though it remains a wild estimation and not an accurate guarantee.
             </p>
           </div>
@@ -225,8 +225,8 @@ const App = () => {
         <div className="p-6 bg-white/[0.01] flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5">
           <div className="relative w-full max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Search domains..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -234,62 +234,69 @@ const App = () => {
             />
           </div>
           <div className="flex flex-col md:flex-row items-center gap-6">
-             <div className="flex flex-col gap-1 text-[11px] font-medium text-slate-400">
-                <div className="flex items-center gap-2 uppercase font-black tracking-wide">
-                  <ShieldCheck size={14} className="text-blue-500" />
-                  Inventory Protection
-                </div>
-                <p className="leading-relaxed opacity-80">
-                  Select assets to put for sale or cancel auto-renewal. Every choice is synced to the database.
-                </p>
-             </div>
-             <div className="flex items-center gap-2 text-sm font-black text-slate-400 uppercase tracking-wide whitespace-nowrap">
-                <Info size={16} className="text-blue-500" />
-                {GODADDY_FEE_PERCENT}% Fee
-             </div>
+            <div className="flex flex-col gap-1 text-[11px] font-medium text-slate-400">
+              <div className="flex items-center gap-2 uppercase font-black tracking-wide">
+                <ShieldCheck size={14} className="text-blue-500" />
+                Inventory Protection
+              </div>
+              <p className="leading-relaxed opacity-80">
+                Select assets to put for sale
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-black text-slate-400 uppercase tracking-wide whitespace-nowrap">
+              <Info size={16} className="text-blue-500" />
+              {GODADDY_FEE_PERCENT}% Fee
+            </div>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="sticky top-0 bg-[#0d0e14] z-10">
+            <thead className="sticky top-0 bg-[#0d0e14] z-10 border-b border-white/5">
               <tr>
-                <th className="px-6 md:px-8 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Asset Details</th>
-                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Cost (Yearly)</th>
-                <th className="px-3 md:px-6 py-5 text-[10px] text-blue-400 font-bold uppercase tracking-widest text-right">Est. Sale Price</th>
-                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">List for Sale</th>
+                <th className="px-6 md:px-8 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest whitespace-nowrap">Asset Details</th>
+                <th className="hidden md:table-cell px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Cost (Yearly)</th>
+                <th className="hidden md:table-cell px-6 py-5 text-[10px] text-blue-400 font-bold uppercase tracking-widest text-right">Est. Sale Price</th>
+                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center whitespace-nowrap">List for Sale</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
               <AnimatePresence>
                 {filteredData.map((item) => {
                   const domain = item['Domain Name'];
-                  const selection = savedSelections[domain] || { forSale: false, cancelAutoRenew: false };
-                  
+                  const selection = savedSelections[domain] || { forSale: false };
+
                   return (
-                    <motion.tr 
+                    <motion.tr
                       layout
                       key={domain}
                       onClick={() => handleToggle(domain, !selection.forSale)}
                       className="hover:bg-white/[0.04] active:bg-white/[0.08] transition-colors cursor-pointer group"
                     >
-                      <td className="px-6 md:px-8 py-5 min-w-[200px]">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors break-all whitespace-normal">{domain}</span>
-                          <span className="text-[9px] text-slate-500 font-medium">Expires: {item['Expiration Date']}</span>
+                      <td className="px-6 md:px-8 py-5">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors break-all whitespace-normal leading-tight">{domain}</span>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1.5 items-center">
+                            <span className="text-[9px] text-slate-500 font-bold tracking-tight">EXP: {item['Expiration Date']}</span>
+                            {/* Mobile-only stats inline */}
+                            <div className="flex md:hidden items-center gap-2">
+                               <span className="text-[9px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/5">COST: {item['Renewal Price']}/yr</span>
+                               <span className="text-[9px] text-blue-400/70 bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10 whitespace-nowrap">EST: {item['Estimated Value']}</span>
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-4 md:px-6 py-5 text-right font-bold text-white text-[11px] md:text-sm whitespace-nowrap">
+                      <td className="hidden md:table-cell px-4 md:px-6 py-5 text-right font-bold text-white text-[11px] md:text-sm whitespace-nowrap">
                         {formatEuro(parsePrice(item['Renewal Price']))} <span className="text-[10px] text-slate-500 font-normal">/ yr</span>
                       </td>
-                      <td className="px-3 md:px-6 py-5 text-right">
-                         <div className="flex flex-col">
-                            <span className="text-[11px] md:text-sm font-bold text-blue-400 italic">~{formatEuro(parsePrice(item['Estimated Value']))}</span>
-                         </div>
+                      <td className="hidden md:table-cell px-3 md:px-6 py-5 text-right">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] md:text-sm font-bold text-blue-400 italic">~{formatEuro(parsePrice(item['Estimated Value']))}</span>
+                        </div>
                       </td>
                       <td className="px-4 md:px-6 py-5 text-center">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={selection.forSale}
                           readOnly // Controlled by row click
                           className="w-5 h-5 rounded-md accent-blue-600 cursor-pointer transition-transform group-hover:scale-110"
@@ -303,7 +310,7 @@ const App = () => {
           </table>
         </div>
       </div>
-      
+
       <footer className="py-12 flex flex-col items-center gap-4 opacity-30">
         <p className="text-[10px] font-black uppercase tracking-[0.4em]">Proprietary Data Systems &bull; 2026</p>
       </footer>

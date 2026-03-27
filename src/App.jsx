@@ -115,11 +115,10 @@ const App = () => {
   const stats = useMemo(() => {
     let totalPayingPrice = 0;
     let totalSaleMarketVal = 0;
-    let savedByCanceling = 0;
 
     data.forEach(item => {
       const domainName = item['Domain Name'];
-      const selection = savedSelections[domainName] || { forSale: false, cancelAutoRenew: false };
+      const selection = savedSelections[domainName] || { forSale: false };
       
       const price = parsePrice(item['Renewal Price']);
       const marketVal = parsePrice(item['Estimated Value']);
@@ -129,13 +128,9 @@ const App = () => {
       if (selection.forSale) {
         totalSaleMarketVal += marketVal * (1 - GODADDY_FEE_PERCENT/100);
       }
-      
-      if (selection.cancelAutoRenew) {
-        savedByCanceling += price;
-      }
     });
 
-    return { totalPayingPrice, totalSaleMarketVal, savedByCanceling };
+    return { totalPayingPrice, totalSaleMarketVal };
   }, [data, savedSelections]);
 
   const filteredData = useMemo(() => {
@@ -182,7 +177,7 @@ const App = () => {
       </header>
 
       {/* MAIN PANELS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* 1. TOTAL PAYING PRICE */}
         <div className="glass p-8 border-l-4 border-blue-500/50">
@@ -208,18 +203,6 @@ const App = () => {
           <div className="flex flex-col mt-2 gap-1">
             <p className="text-[9px] text-slate-500 font-bold tracking-tight uppercase">Net Estimate (After Fees)</p>
           </div>
-        </div>
-
-        {/* 3. MONEY SAVED BY CANCELING */}
-        <div className="glass p-8 border-l-4 border-rose-500/50 bg-rose-500/[0.02]">
-          <div className="flex justify-between items-start mb-4">
-            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Guaranteed Savings</p>
-            <Trash2 className="text-rose-500/30" size={20} />
-          </div>
-          <h2 className="text-3xl font-bold text-rose-400 tracking-tight">
-            {formatEuro(stats.savedByCanceling)}
-          </h2>
-          <p className="text-[9px] text-slate-600 mt-2 font-black italic uppercase italic">Stop Renewal Savings</p>
         </div>
       </div>
 
@@ -275,7 +258,6 @@ const App = () => {
                 <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Cost (Yearly)</th>
                 <th className="px-3 md:px-6 py-5 text-[10px] text-blue-400 font-bold uppercase tracking-widest text-right">Est. Sale Price</th>
                 <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">List for Sale</th>
-                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Cancel Renewal</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
@@ -288,7 +270,8 @@ const App = () => {
                     <motion.tr 
                       layout
                       key={domain}
-                      className="hover:bg-white/[0.04] active:bg-white/[0.08] transition-colors group"
+                      onClick={() => handleToggle(domain, !selection.forSale)}
+                      className="hover:bg-white/[0.04] active:bg-white/[0.08] transition-colors cursor-pointer group"
                     >
                       <td className="px-6 md:px-8 py-5 min-w-[200px]">
                         <div className="flex flex-col">
@@ -308,16 +291,8 @@ const App = () => {
                         <input 
                           type="checkbox" 
                           checked={selection.forSale}
-                          onChange={(e) => handleToggle(domain, 'forSale', e.target.checked)}
+                          readOnly // Controlled by row click
                           className="w-5 h-5 rounded-md accent-blue-600 cursor-pointer transition-transform group-hover:scale-110"
-                        />
-                      </td>
-                      <td className="px-4 md:px-6 py-5 text-center">
-                        <input 
-                          type="checkbox" 
-                          checked={selection.cancelAutoRenew}
-                          onChange={(e) => handleToggle(domain, 'cancelAutoRenew', e.target.checked)}
-                          className="w-5 h-5 rounded-md accent-rose-600 cursor-pointer transition-transform group-hover:scale-110"
                         />
                       </td>
                     </motion.tr>

@@ -2,5 +2,6 @@ node_modules
 dist
 .env
 .netlify
-.vscode
-*.log
+deno.lock
+.DS_Store
+*.local

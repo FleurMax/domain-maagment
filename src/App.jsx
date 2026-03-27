@@ -220,8 +220,8 @@ const App = () => {
             />
           </div>
           <div className="flex items-center gap-6">
-             <div className="flex items-center gap-2 text-[9px] font-black text-slate-500 uppercase">
-                <Info size={14} className="text-blue-500" />
+             <div className="flex items-center gap-2 text-sm font-black text-slate-400 uppercase tracking-wide">
+                <Info size={16} className="text-blue-500" />
                 GoDaddy takes {GODADDY_FEE_PERCENT}% fee per sale.
              </div>
           </div>
@@ -247,11 +247,12 @@ const App = () => {
                     <motion.tr 
                       layout
                       key={domain}
-                      className="hover:bg-white/[0.02] transition-colors"
+                      onClick={() => handleToggle(domain, !selection.forSale)}
+                      className="hover:bg-white/[0.04] active:bg-white/[0.08] transition-colors cursor-pointer group"
                     >
                       <td className="px-6 md:px-8 py-5">
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-200 truncate max-w-[120px] md:max-w-none">{domain}</span>
+                          <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors truncate max-w-[120px] md:max-w-none">{domain}</span>
                           <span className="text-[9px] text-slate-500 font-medium">Expires: {item['Expiration Date']}</span>
                         </div>
                       </td>
@@ -267,8 +268,8 @@ const App = () => {
                         <input 
                           type="checkbox" 
                           checked={selection.forSale}
-                          onChange={(e) => handleToggle(domain, e.target.checked)}
-                          className="w-5 h-5 rounded-md accent-blue-600 cursor-pointer hover:scale-110 transition-transform"
+                          readOnly // Controlled by row click
+                          className="w-5 h-5 rounded-md accent-blue-600 cursor-pointer transition-transform group-hover:scale-110"
                         />
                       </td>
                     </motion.tr>

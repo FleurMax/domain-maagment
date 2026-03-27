@@ -1,24 +1,42 @@
-:root {
-  --outfit: 'Outfit', sans-serif;
-  --bg: #090a0f;
-  --surface: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.08);
-  --accent: #3b82f6;
-  --text: #f1f5f9;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #090a0f;
+    --surface: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #f1f5f9;
+  }
+
+  body {
+    @apply bg-[#090a0f] text-slate-200 antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: var(--bg); color: var(--text); font-family: var(--outfit); -webkit-font-smoothing: antialiased; }
+@layer components {
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl;
+  }
+  
+  .card-gradient {
+    background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.05), transparent);
+  }
+}
 
-.glass { background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.5rem; }
-.card { padding: 2rem; border-radius: 1.5rem; transition: transform 0.2s, border-color 0.2s; }
-.card:hover { transform: translateY(-3px); border-color: rgba(59, 130, 246, 0.2); }
-
-button { cursor: pointer; border: none; font-family: inherit; }
-input[type="checkbox"] { accent-color: var(--accent); width: 1.2rem; height: 1.2rem; cursor: pointer; }
-
-/* Custom Switch for Sale (Optional aesthetic upgrade) */
-.toggle-row { display: flex; align-items: center; justify-content: center; }
-tr:hover { background: rgba(255,255,255,0.01); }
-td { padding: 1.25rem 1rem; border-bottom: 1px solid var(--border); }
-th { padding: 1rem; text-align: left; opacity: 0.6; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

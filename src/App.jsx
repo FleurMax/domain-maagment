@@ -16,13 +16,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 const GODADDY_FEE_PERCENT = 25;
 
 const App = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(() => {
+    // Initial load from localStorage for speed
+    const local = localStorage.getItem('domain-data');
+    return local ? JSON.parse(local) : [];
+  });
   const [savedSelections, setSavedSelections] = useState(() => {
     // Initial load from localStorage for speed
     const local = localStorage.getItem('domain-selections');
     return local ? JSON.parse(local) : {};
   });
-  const [loading, setLoading] = useState(true);
+  
+  // Only show loader if we have NO data at all
+  const [loading, setLoading] = useState(data.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [warmed, setWarmed] = useState(false);
@@ -30,21 +36,21 @@ const App = () => {
   // Load Data and Warm-up Backend
   useEffect(() => {
     const fetchData = async () => {
-      // 1. Load static domain list first (instantly)
+      // 1. Fetch static domain list and cache it
       try {
         const domainsRes = await fetch('/domains.json');
         if (domainsRes.ok) {
           const domains = await domainsRes.json();
           setData(domains);
-          setLoading(false); // 🔥 Show UI immediately once we have the domains
+          localStorage.setItem('domain-data', JSON.stringify(domains));
+          setLoading(false); 
         }
       } catch (err) {
-        console.error("Failed to load domains.json", err);
+        console.warn("Using offline domain data", err);
       }
 
       // 2. Background: Warm up Netlify function and Fetch DB Selections
       try {
-        // Initial ping to wake up the function
         fetch('/api/domains?warm=true').then(() => setWarmed(true));
 
         const selectionsRes = await fetch('/api/domains');
@@ -54,7 +60,7 @@ const App = () => {
           localStorage.setItem('domain-selections', JSON.stringify(selections));
         }
       } catch (err) {
-        console.warn("Could not sync with cloud, using local state", err);
+        console.warn("Could not sync with cloud, using local selections", err);
       }
     };
     fetchData();
@@ -143,19 +149,20 @@ const App = () => {
     <div className="max-w-6xl mx-auto p-4 md:p-12 space-y-8 min-h-screen">
       
       {/* Dynamic Header */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 glass p-8">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Domain Liquidation Tool</h1>
-          <p className="text-xs text-slate-500 mt-1 font-medium italic">Strategize your 160 domain portfolio actions.</p>
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 glass p-8 shadow-2xl relative overflow-hidden group">
+        <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        <div className="z-10">
+          <h1 className="text-3xl font-black text-white tracking-tight">Domain Liquidation</h1>
+          <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-widest opacity-80">Portfolio Strategizer • 160 Assets</p>
         </div>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-2xl border border-white/10 group overflow-hidden">
-            <Zap className={`h-4 w-4 ${warmed ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
-            <span className="text-[9px] uppercase font-black text-slate-400">Backend: {warmed ? 'Warmed Up' : 'Cloud Cold'}</span>
+        <div className="flex flex-wrap gap-3 z-10">
+          <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+            <Zap className={`h-3 w-3 ${warmed ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
+            <span className="text-[9px] uppercase font-black text-slate-400">Cloud: {warmed ? 'Ready' : 'Cold'}</span>
           </div>
-          <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-2xl border border-white/10 overflow-hidden">
-            <div className={`h-2 w-2 rounded-full ${syncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`}></div>
-            <span className="text-[9px] uppercase font-black text-slate-400">Relay: {syncing ? 'Syncing...' : 'Connected'}</span>
+          <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+            <div className={`h-2 w-2 rounded-full ${syncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]'}`}></div>
+            <span className="text-[9px] uppercase font-black text-slate-400">Database: {syncing ? 'Syncing' : 'Live'}</span>
           </div>
         </div>
       </header>

@@ -286,7 +286,7 @@ const App = () => {
                                   <span className="text-sm font-black tracking-tight">{formatEuro(parsePrice(item['Renewal Price']))} <span className="text-[10px] opacity-40 font-normal">/ yr</span></span>
                                </div>
                                <div className="flex items-center gap-2 text-blue-400">
-                                  <span className="text-[9px] uppercase font-black text-slate-500 w-12">Estim:</span>
+                                  <span className="text-[9px] uppercase font-black text-slate-500 w-24">Estimated Sale:</span>
                                   <span className="text-sm font-black tracking-tight italic">~{formatEuro(parsePrice(item['Estimated Value']))}</span>
                                </div>
                             </div>

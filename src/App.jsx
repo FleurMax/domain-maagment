@@ -273,15 +273,22 @@ const App = () => {
                       onClick={() => handleToggle(domain, !selection.forSale)}
                       className="hover:bg-white/[0.04] active:bg-white/[0.08] transition-colors cursor-pointer group"
                     >
-                      <td className="px-6 md:px-8 py-5">
-                        <div className="flex flex-col gap-1.5">
+                      <td className="px-5 md:px-8 py-6">
+                        <div className="flex flex-col gap-2">
                           <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors break-all whitespace-normal leading-tight">{domain}</span>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1.5 items-center">
-                            <span className="text-[9px] text-slate-500 font-bold tracking-tight">EXP: {item['Expiration Date']}</span>
-                            {/* Mobile-only stats inline */}
-                            <div className="flex md:hidden items-center gap-2">
-                               <span className="text-[9px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/5">COST: {item['Renewal Price']}/yr</span>
-                               <span className="text-[9px] text-blue-400/70 bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10 whitespace-nowrap">EST: {item['Estimated Value']}</span>
+                          <div className="flex flex-col md:flex-row md:items-center gap-2">
+                            <span className="text-[10px] text-slate-500 font-bold tracking-tight">EXPIRES: {item['Expiration Date']}</span>
+                            
+                            {/* ENHANCED MOBILE PRICING BLOCK */}
+                            <div className="flex md:hidden flex-col gap-1.5 mt-1 border-t border-white/5 pt-2">
+                               <div className="flex items-center gap-2 text-white">
+                                  <span className="text-[9px] uppercase font-black text-slate-500 w-12">Cost:</span>
+                                  <span className="text-sm font-black tracking-tight">{formatEuro(parsePrice(item['Renewal Price']))} <span className="text-[10px] opacity-40 font-normal">/ yr</span></span>
+                               </div>
+                               <div className="flex items-center gap-2 text-blue-400">
+                                  <span className="text-[9px] uppercase font-black text-slate-500 w-12">Estim:</span>
+                                  <span className="text-sm font-black tracking-tight italic">~{formatEuro(parsePrice(item['Estimated Value']))}</span>
+                               </div>
                             </div>
                           </div>
                         </div>

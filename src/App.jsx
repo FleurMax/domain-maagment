@@ -96,6 +96,23 @@ const App = () => {
     }
   };
 
+  // Utility to format money nicely
+  const formatEuro = (val) => {
+    return new Intl.NumberFormat('nl-NL', { 
+      style: 'currency', 
+      currency: 'EUR',
+      minimumFractionDigits: 2 
+    }).format(val);
+  };
+
+  // Clean raw price strings from CSV/JSON (handles broken â‚¬ encodings)
+  const parsePrice = (priceStr) => {
+    if (!priceStr) return 0;
+    // Remove everything except numbers, dots and commas
+    const cleaned = priceStr.replace(/[^0-9,.]/g, '').replace(',', '.');
+    return parseFloat(cleaned) || 0;
+  };
+
   // Calculations
   const stats = useMemo(() => {
     let totalPayingPrice = 0;
@@ -106,13 +123,12 @@ const App = () => {
       const domainName = item['Domain Name'];
       const selection = savedSelections[domainName] || { forSale: false, cancelAutoRenew: false };
       
-      const price = parseFloat(item['Renewal Price']?.replace(/[^0-9.-]+/g, "")) || 0;
-      const marketVal = parseFloat(item['Estimated Value']?.replace(/[^0-9.-]+/g, "")) || 0;
+      const price = parsePrice(item['Renewal Price']);
+      const marketVal = parsePrice(item['Estimated Value']);
 
       totalPayingPrice += price;
 
       if (selection.forSale) {
-        // Boss takes home 80% (assuming 20% GoDaddy fee)
         totalSaleMarketVal += marketVal * (1 - GODADDY_FEE_PERCENT/100);
       }
       
@@ -177,9 +193,9 @@ const App = () => {
             <DollarSign className="text-blue-500/30" size={20} />
           </div>
           <h2 className="text-4xl font-bold text-white tracking-tight">
-            €{stats.totalPayingPrice.toLocaleString()}
+            {formatEuro(stats.totalPayingPrice)}
           </h2>
-          <p className="text-[9px] text-slate-600 mt-2 font-bold italic">ANNUAL OPERATING COST</p>
+          <p className="text-[9px] text-slate-600 mt-2 font-bold italic uppercase tracking-wider">Annual Operating Cost</p>
         </div>
 
         {/* 2. MONEY EARNED ON SALE */}
@@ -189,11 +205,11 @@ const App = () => {
             <TrendingUp className="text-emerald-500/30" size={20} />
           </div>
           <h2 className="text-4xl font-bold text-emerald-400 tracking-tight">
-            €{stats.totalSaleMarketVal.toLocaleString()}
+            {formatEuro(stats.totalSaleMarketVal)}
           </h2>
           <div className="flex flex-col mt-2 gap-1">
-            <p className="text-[9px] text-slate-500 font-bold">WILD GUESS - NOT ACCURATE</p>
-            <p className="text-[8px] text-slate-600 italic">GoDaddy Commission @ {GODADDY_FEE_PERCENT}% Included.</p>
+            <p className="text-[9px] text-slate-500 font-bold tracking-tight uppercase">wild estimate - not exact</p>
+            <p className="text-[8px] text-slate-600 italic">Net to owner after {GODADDY_FEE_PERCENT}% fee.</p>
           </div>
         </div>
 
@@ -204,9 +220,9 @@ const App = () => {
             <Trash2 className="text-rose-500/30" size={20} />
           </div>
           <h2 className="text-4xl font-bold text-rose-400 tracking-tight">
-            €{stats.savedByCanceling.toLocaleString()}
+            {formatEuro(stats.savedByCanceling)}
           </h2>
-          <p className="text-[9px] text-slate-600 mt-2 font-black italic uppercase">GUARANTEED SAVINGS</p>
+          <p className="text-[9px] text-slate-600 mt-2 font-black italic uppercase tracking-wider">Guaranteed Gross Savings</p>
         </div>
       </div>
 
@@ -261,11 +277,11 @@ const App = () => {
                         </div>
                       </td>
                       <td className="px-4 md:px-6 py-5 text-right font-bold text-white text-sm">
-                        {item['Renewal Price']}
+                        {formatEuro(parsePrice(item['Renewal Price']))}
                       </td>
                       <td className="hidden md:table-cell px-6 py-5 text-right">
                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-blue-400 italic">~{item['Estimated Value']}</span>
+                            <span className="text-sm font-bold text-blue-400 italic">~{formatEuro(parsePrice(item['Estimated Value']))}</span>
                          </div>
                       </td>
                       <td className="px-4 md:px-6 py-5 text-center">

@@ -29,31 +29,35 @@ const App = () => {
 
   // Load Data and Warm-up Backend
   useEffect(() => {
-    const warmupAndFetch = async () => {
+    const fetchData = async () => {
+      // 1. Load static domain list first (instantly)
       try {
-        // 1. Warmup Ping to Backend (Netlify function)
+        const domainsRes = await fetch('/domains.json');
+        if (domainsRes.ok) {
+          const domains = await domainsRes.json();
+          setData(domains);
+          setLoading(false); // 🔥 Show UI immediately once we have the domains
+        }
+      } catch (err) {
+        console.error("Failed to load domains.json", err);
+      }
+
+      // 2. Background: Warm up Netlify function and Fetch DB Selections
+      try {
+        // Initial ping to wake up the function
         fetch('/api/domains?warm=true').then(() => setWarmed(true));
 
-        // 2. Fetch all data
-        const [domainsRes, selectionsRes] = await Promise.all([
-          fetch('/domains.json'),
-          fetch('/api/domains') 
-        ]);
-        
-        const domains = await domainsRes.json();
-        const selections = selectionsRes.ok ? await selectionsRes.json() : {};
-        
-        setData(domains);
-        setSavedSelections(selections);
-        // Persist to local storage
-        localStorage.setItem('domain-selections', JSON.stringify(selections));
+        const selectionsRes = await fetch('/api/domains');
+        if (selectionsRes.ok) {
+          const selections = await selectionsRes.json();
+          setSavedSelections(selections);
+          localStorage.setItem('domain-selections', JSON.stringify(selections));
+        }
       } catch (err) {
-        console.error("Connectivity issue", err);
-      } finally {
-        setLoading(false);
+        console.warn("Could not sync with cloud, using local state", err);
       }
     };
-    warmupAndFetch();
+    fetchData();
   }, []);
 
   // Sync selection to MongoDB and LocalStorage
@@ -122,9 +126,15 @@ const App = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-black gap-4">
-        <Loader2 className="animate-spin text-blue-500 h-10 w-10" />
-        <span className="text-[10px] uppercase font-bold text-slate-500">Initializing Database Connection</span>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-black gap-6">
+        <div className="relative">
+          <Loader2 className="animate-spin text-blue-500 h-10 w-10" />
+          <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full"></div>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[11px] uppercase font-black text-slate-400 tracking-[0.2em]">Preparing Portfolio</span>
+          <span className="text-[9px] text-slate-600 font-bold italic">Checking 160 inventory assets...</span>
+        </div>
       </div>
     );
   }
@@ -218,11 +228,11 @@ const App = () => {
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-[#0d0e14] z-10">
               <tr>
-                <th className="px-8 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Asset Details</th>
-                <th className="px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Owner Cost</th>
-                <th className="px-6 py-5 text-[10px] text-blue-500 font-bold uppercase tracking-widest text-right">Estim. Sale (Wild Guess)</th>
-                <th className="px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Put For Sale</th>
-                <th className="px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Stop Payment</th>
+                <th className="px-6 md:px-8 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Asset Details</th>
+                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Cost</th>
+                <th className="hidden md:table-cell px-6 py-5 text-[10px] text-blue-500 font-bold uppercase tracking-widest text-right">Est. Sale</th>
+                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Sale</th>
+                <th className="px-4 md:px-6 py-5 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Stop</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
@@ -237,22 +247,21 @@ const App = () => {
                       key={domain}
                       className="hover:bg-white/[0.02] transition-colors"
                     >
-                      <td className="px-8 py-5">
+                      <td className="px-6 md:px-8 py-5">
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-200">{domain}</span>
+                          <span className="text-sm font-bold text-slate-200 truncate max-w-[120px] md:max-w-none">{domain}</span>
                           <span className="text-[9px] text-slate-500 font-medium">Expires: {item['Expiration Date']}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-right font-bold text-white text-sm">
+                      <td className="px-4 md:px-6 py-5 text-right font-bold text-white text-sm">
                         {item['Renewal Price']}
                       </td>
-                      <td className="px-6 py-5 text-right">
+                      <td className="hidden md:table-cell px-6 py-5 text-right">
                          <div className="flex flex-col">
                             <span className="text-sm font-bold text-blue-400 italic">~{item['Estimated Value']}</span>
-                            <span className="text-[8px] text-slate-600 font-black">UNCERTAIN</span>
                          </div>
                       </td>
-                      <td className="px-6 py-5 text-center">
+                      <td className="px-4 md:px-6 py-5 text-center">
                         <input 
                           type="checkbox" 
                           checked={selection.forSale}
@@ -260,7 +269,7 @@ const App = () => {
                           className="w-5 h-5 rounded-md accent-blue-600 cursor-pointer hover:scale-110 transition-transform"
                         />
                       </td>
-                      <td className="px-6 py-5 text-center">
+                      <td className="px-4 md:px-6 py-5 text-center">
                         <input 
                           type="checkbox" 
                           checked={selection.cancelAutoRenew}
